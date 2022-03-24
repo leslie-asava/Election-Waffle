@@ -43,7 +43,7 @@ void vote_position(char position[30])
     char path[20] = "candidates/";
 
     // Prepare path
-    strcat(position, ".txt");
+    //strcat(position, ".txt");
     strcat(path, position);
 
     printf("%s", path);
@@ -53,19 +53,39 @@ void vote_position(char position[30])
     candfileptr = fopen(path, "r");
 
     char read_name[30];
+    char read_id[30];
     int line_number = 1;
 
     while (fgets(read_name, sizeof(read_name), candfileptr))
     {
         printf("\n\t\t%d. %s", line_number, read_name);
+        line_number += 1;
     }
 
     fclose(candfileptr);
 
     printf("\n\t\tType your selection: ");
-    scanf("%s", read_name);
+    scanf("%s", read_id);
 
-    printf("\n\t\t%s", read_name);
+    printf("\n\t\t%s", read_id);
+    
+    // Change path to votes
+	strcpy(path,"votes/");
+	
+	strcat(path, position);
+
+    // Set up file details
+    FILE *votesfileptr;
+    votesfileptr = fopen(path, "a");
+    
+    strcat(read_id, "\n");
+    
+    fprintf(votesfileptr, read_id);
+    
+    fclose(votesfileptr);
+    
+    printf("%s",path);
+    
 }
 
 void vote_for_candidates()
@@ -78,8 +98,9 @@ void vote_for_candidates()
         "Chairman",
         "Treasurer",
         "Secretary"};
-    size_t positions = 3;
-    for (size_t i = 0; i < positions; i++)
+    int positions = 3;
+    int i;
+    for (i = 0; i < positions; i++)
     {
         printf("\n\t\tVOTING\n\t\tMake your best selections\n");
         // Display candidates to choose from
@@ -153,13 +174,13 @@ bool authenticate_voter(int voter_id)
         // Determine if credentials match
         if (!strcmp(read_name, input_name) && !strcmp(read_pass, input_pass))
         {
-            system("clear");
+            system("cls");
             printf("\n\t[++] Success!!!\n");
             return true;
         }
         else
         {
-            system("clear");
+            system("cls");
             printf("\n\t[*#@!] No match found :(\n");
             char retry[1];
             printf("\n\t[--] Retry? [y/n]: ");
@@ -170,7 +191,7 @@ bool authenticate_voter(int voter_id)
             }
             else
             {
-                system("clear");
+                system("cls");
             }
         }
     }
