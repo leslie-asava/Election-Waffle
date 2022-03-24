@@ -21,7 +21,8 @@ bool authenticate_voter(int voter_id);
 int main()
 {
 
-    vote_for_candidates();
+    //vote_for_candidates();
+    tally_votes();
 
     return 0;
 }
@@ -29,7 +30,66 @@ int main()
 int tally_votes()
 {
 
-    return 0;
+    // Define titles
+	char position_titles[3][30] = {
+        "Chairman",
+        "Treasurer",
+        "Secretary"};
+    int positions = 3;
+    
+    // Array to hold totals for each position
+    //int position_tallies[3][30];
+    
+    // Iterate positions
+    int i;
+    for (i = 0; i < positions; i++)
+    {
+        printf("\n\t\tTALLYING\n\t\tThis will take a sec\n");
+        // Display candidates to choose from
+        tally_position(position_titles[i]);
+    }
+}
+
+void tally_position(char position[30])
+{
+    //printf("\n\t\tPosition: %s\n\t\tCandidates\n", position);
+
+    strcat(position, ".txt");
+    printf("%s", position);
+
+    // Variables for reading file
+    char path[20] = "votes/";
+
+    // Prepare path
+    strcat(path, position);
+
+    printf("%s", path);
+
+    // Set up file details
+    FILE *candfileptr;
+    candfileptr = fopen(path, "r");
+
+    char read_name[30];
+    char read_id[30];
+    int line_number = 1;
+    int candidate_votes[30] = {0};
+
+    while (fgets(read_id, sizeof(read_id), candfileptr))
+    {
+        //printf("\n\t\t%d. %s", line_number, read_name);
+        line_number += 1; 
+        candidate_votes[atoi(read_id)] ++;
+    }
+    
+    int i = 0;
+	for (i = 0; i < 4; i++)
+	{
+		printf("%d\n",candidate_votes[i]);
+	}
+    
+
+    fclose(candfileptr);
+    
 }
 
 void vote_position(char position[30])
@@ -43,7 +103,6 @@ void vote_position(char position[30])
     char path[20] = "candidates/";
 
     // Prepare path
-    //strcat(position, ".txt");
     strcat(path, position);
 
     printf("%s", path);
@@ -80,11 +139,11 @@ void vote_position(char position[30])
     
     strcat(read_id, "\n");
     
-    fprintf(votesfileptr, read_id);
-    
+    // Append Candidate ID to file
+	fprintf(votesfileptr, read_id);
+	
     fclose(votesfileptr);
     
-    printf("%s",path);
     
 }
 
