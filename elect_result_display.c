@@ -12,8 +12,8 @@ struct Vote
 
 // Functions
 int tally_votes();
-void tally_position();
-void vote_position();
+void tally_position(char position[30], int * array_ptr);
+void vote_position(char position[30]);
 void vote_for_candidates();
 char *remove_new_line(char *strbuffer);
 bool authenticate_voter(int voter_id);
@@ -28,6 +28,54 @@ int main()
     return 0;
 }
 
+void display_results(char position[30],int * array_ptr)
+{
+	printf("\n\n\tPosition: %s", position);
+
+    // Variables for reading file
+    char path[20] = "candidates/";
+
+    // Prepare path
+    strcat(path, position);
+
+    // Set up file details
+    FILE *candfileptr;
+    candfileptr = fopen(path, "r");
+
+    char read_name[30];
+    char read_id[30];
+    int line_number = 1;
+    int max = -1;
+    char winner[30];
+    float total = 0;
+    
+
+    while (fgets(read_name, sizeof(read_name), candfileptr))
+    {
+        printf("\n\t\t%d. %s \t-\t %d", line_number, remove_new_line(read_name),array_ptr[line_number]);
+        total = total + array_ptr[line_number];
+        
+        // Track who has the highest number of votes
+		if (max < array_ptr[line_number])
+        {
+        	max = array_ptr[line_number];
+        	strcpy(winner,read_name);
+		}
+		else if (max == array_ptr[line_number])
+        {
+        	max = array_ptr[line_number];
+        	strcat(winner, " & ");
+        	strcat(winner,read_name);
+		}
+        line_number += 1;
+    }
+    
+    printf("\n\n\tWINNER :: %s with a total of %d votes [%.2f%%]",winner,max,max/total);
+    printf("\n------------------------------------------------------");
+
+    fclose(candfileptr);
+}
+
 int tally_votes()
 {
 
@@ -39,32 +87,32 @@ int tally_votes()
     int positions = 3;
     
     // Array to hold totals for each position
-    int position_tallies[3][30];
+    int position_tallies[3][30] = {0};
+    
+    printf("\n\t\t\tTALLYING\n\t\tThis will take a second");
     
     // Iterate positions
     int i;
     for (i = 0; i < positions; i++)
     {
-        printf("\n\t\tTALLYING\n\t\tThis will take a sec\n");
-        // Display candidates to choose from
-        tally_position(position_titles[i],);
+       
+		// Display candidates to choose from
+        int *array_ptr = position_tallies[i];
+        tally_position(position_titles[i],array_ptr);
+        display_results(position_titles[i],array_ptr);
     }
 }
 
-void tally_position(char position[30])
+void tally_position(char position[30], int *array_ptr)
 {
-    //printf("\n\t\tPosition: %s\n\t\tCandidates\n", position);
 
     strcat(position, ".txt");
-    printf("%s", position);
 
     // Variables for reading file
     char path[20] = "votes/";
 
     // Prepare path
     strcat(path, position);
-
-    printf("%s", path);
 
     // Set up file details
     FILE *candfileptr;
@@ -73,27 +121,18 @@ void tally_position(char position[30])
     char read_name[30];
     char read_id[30];
     int line_number = 1;
-    int candidate_votes[30] = {0};
+    //int candidate_votes[30] = {0};
 
     while (fgets(read_id, sizeof(read_id), candfileptr))
     {
         //printf("\n\t\t%d. %s", line_number, read_name);
         line_number += 1; 
-        candidate_votes[atoi(read_id)] ++;
-    }
-    
-    int i = 0;
-	for (i = 0; i < 4; i++)
-	{
-		printf("%d\n",candidate_votes[i]);
-	}
-    
+        array_ptr[atoi(read_id)] ++;
+    }  
 
     fclose(candfileptr);
     
 }
-
-void display_results()
 
 void vote_position(char position[30])
 {

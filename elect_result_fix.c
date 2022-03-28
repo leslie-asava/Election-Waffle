@@ -12,8 +12,8 @@ struct Vote
 
 // Functions
 int tally_votes();
-void tally_position();
-void vote_position();
+void tally_position(char position[30], int * array_ptr);
+void vote_position(char position[30]);
 void vote_for_candidates();
 char *remove_new_line(char *strbuffer);
 bool authenticate_voter(int voter_id);
@@ -28,6 +28,15 @@ int main()
     return 0;
 }
 
+void display_results(int *array)
+{
+	int i = 0;
+	for (i = 0; i < 4; i++)
+	{
+		printf("%d\n",array[i]);
+	}
+}
+
 int tally_votes()
 {
 
@@ -39,21 +48,24 @@ int tally_votes()
     int positions = 3;
     
     // Array to hold totals for each position
-    int position_tallies[3][30];
+    int position_tallies[3][30] = {0};
     
     // Iterate positions
     int i;
     for (i = 0; i < positions; i++)
     {
         printf("\n\t\tTALLYING\n\t\tThis will take a sec\n");
-        // Display candidates to choose from
-        tally_position(position_titles[i],);
+        
+		// Display candidates to choose from
+        int *array_ptr = position_tallies[i];
+        tally_position(position_titles[i],array_ptr);
+        display_results(array_ptr);
     }
 }
 
-void tally_position(char position[30])
+void tally_position(char position[30], int *array_ptr)
 {
-    //printf("\n\t\tPosition: %s\n\t\tCandidates\n", position);
+    printf("\n\t\tPosition: %s\n\t\tCandidates\n", position);
 
     strcat(position, ".txt");
     printf("%s", position);
@@ -73,27 +85,25 @@ void tally_position(char position[30])
     char read_name[30];
     char read_id[30];
     int line_number = 1;
-    int candidate_votes[30] = {0};
+    //int candidate_votes[30] = {0};
 
     while (fgets(read_id, sizeof(read_id), candfileptr))
     {
         //printf("\n\t\t%d. %s", line_number, read_name);
         line_number += 1; 
-        candidate_votes[atoi(read_id)] ++;
+        array_ptr[atoi(read_id)] ++;
     }
     
-    int i = 0;
+    /*int i = 0;
 	for (i = 0; i < 4; i++)
 	{
-		printf("%d\n",candidate_votes[i]);
-	}
+		printf("%d\n",array_ptr[i]);
+	}*/
     
 
     fclose(candfileptr);
     
 }
-
-void display_results()
 
 void vote_position(char position[30])
 {
