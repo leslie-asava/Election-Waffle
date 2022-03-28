@@ -98,9 +98,9 @@ int tally_votes()
     for (i = 0; i < positions; i++)
     {
        
-		// Display candidates to choose from
         int *array_ptr = position_tallies[i];
         tally_position(position_titles[i],array_ptr);
+        // Display results for this position
         display_results(position_titles[i],array_ptr);
     }
 }

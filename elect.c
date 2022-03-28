@@ -3,6 +3,14 @@
 #include <stdlib.h>
 #include <string.h>
 
+// Detect OS and define clearing command
+#if defined(_WIN32)
+    #define CLEAR_COMMAND "cls" // Windows
+#else
+	#define CLEAR_COMMAND "clear" // Other OS
+#endif
+
+
 // Vote Struct
 struct Vote
 {
@@ -13,28 +21,75 @@ struct Vote
 // Functions
 int tally_votes();
 void tally_position(char position[30], int * array_ptr);
-void vote_position(char position[30]);
+void display_results(char position[30],int * array_ptr);
+void vote_position();
 void vote_for_candidates();
+int get_number_of_candidates(char path[30]);
+void print_candidate_on_line(int line_number, char path[30]);
 char *remove_new_line(char *strbuffer);
 bool authenticate_voter(int voter_id);
 
 // The main function
 int main()
 {
-
     //vote_for_candidates();
     tally_votes();
+
+    // Quit if user presses <ENTER>
+	char end;
+    printf("\n\n\t\tPress <ENTER> to exit: ");
+    gets(&end);
 
     return 0;
 }
 
-void display_results(int *array)
+void display_results(char position[30],int * array_ptr)
 {
-	int i = 0;
-	for (i = 0; i < 4; i++)
-	{
-		printf("%d\n",array[i]);
-	}
+	printf("\n\n\tPosition: %s", position);
+
+    // Variables for reading file
+    char path[20] = "candidates/";
+
+    // Prepare path
+    strcat(path, position);
+
+    // Set up file details
+    FILE *candfileptr;
+    candfileptr = fopen(path, "r");
+
+    char read_name[30];
+    char read_id[30];
+    int line_number = 1;
+    int max = -1;
+    char winner[30];
+    float total = 0;
+    
+
+    while (fgets(read_name, sizeof(read_name), candfileptr))
+    {
+        printf("\n\t\t%d. %s \t-\t %d", line_number, remove_new_line(read_name),array_ptr[line_number]);
+        total = total + array_ptr[line_number];
+        
+        // Track who has the highest number of votes
+		if (max < array_ptr[line_number])
+        {
+        	max = array_ptr[line_number];
+        	strcpy(winner,read_name);
+		}
+		// If there is a tie print both
+		else if (max == array_ptr[line_number])
+        {
+        	max = array_ptr[line_number];
+        	strcat(winner, " & ");
+        	strcat(winner,read_name);
+		}
+        line_number += 1;
+    }
+    
+    printf("\n\n\tWINNER :: %s with a total of %d votes [%.2f%%]",winner,max,(max/total)*100);
+    printf("\n------------------------------------------------------");
+
+    fclose(candfileptr);
 }
 
 int tally_votes()
@@ -50,33 +105,30 @@ int tally_votes()
     // Array to hold totals for each position
     int position_tallies[3][30] = {0};
     
+    printf("\n\t\t\tTALLYING\n\t\tThis will take a second");
+    
     // Iterate positions
     int i;
     for (i = 0; i < positions; i++)
     {
-        printf("\n\t\tTALLYING\n\t\tThis will take a sec\n");
-        
-		// Display candidates to choose from
+       
         int *array_ptr = position_tallies[i];
         tally_position(position_titles[i],array_ptr);
-        display_results(array_ptr);
+        // Display results for this position
+        display_results(position_titles[i],array_ptr);
     }
 }
 
 void tally_position(char position[30], int *array_ptr)
 {
-    printf("\n\t\tPosition: %s\n\t\tCandidates\n", position);
 
     strcat(position, ".txt");
-    printf("%s", position);
 
     // Variables for reading file
     char path[20] = "votes/";
 
     // Prepare path
     strcat(path, position);
-
-    printf("%s", path);
 
     // Set up file details
     FILE *candfileptr;
@@ -92,14 +144,7 @@ void tally_position(char position[30], int *array_ptr)
         //printf("\n\t\t%d. %s", line_number, read_name);
         line_number += 1; 
         array_ptr[atoi(read_id)] ++;
-    }
-    
-    /*int i = 0;
-	for (i = 0; i < 4; i++)
-	{
-		printf("%d\n",array_ptr[i]);
-	}*/
-    
+    }  
 
     fclose(candfileptr);
     
@@ -107,57 +152,78 @@ void tally_position(char position[30], int *array_ptr)
 
 void vote_position(char position[30])
 {
-    printf("\n\t\tPosition: %s\n\t\tCandidates\n", position);
+    printf("\n\t\t<<< Position: %s >>>\n\n\t\tCandidates\n", position);
 
-    strcat(position, ".txt");
-    printf("%s", position);
-
-    // Variables for reading file
-    char path[20] = "candidates/";
-
+    char position_title[30];
+    strcpy(position_title, position);
     // Prepare path
+    char path[20] = "candidates/";
+    char extension[] = ".txt";
+    strcat(position, extension);
     strcat(path, position);
-
-    printf("%s", path);
 
     // Set up file details
     FILE *candfileptr;
     candfileptr = fopen(path, "r");
 
     char read_name[30];
-    char read_id[30];
     int line_number = 1;
 
     while (fgets(read_name, sizeof(read_name), candfileptr))
     {
-        printf("\n\t\t%d. %s", line_number, read_name);
-        line_number += 1;
+        printf("\n\t\t%d. %s", line_number, remove_new_line(read_name));
+        line_number++;
     }
 
     fclose(candfileptr);
 
-    printf("\n\t\tType your selection: ");
-    scanf("%s", read_id);
+    // Vote confirmation variables
+    char confirm[1];
+    char read_id[30];
+    int candidate_selection;
 
-    printf("\n\t\t%s", read_id);
-    
-    // Change path to votes
-	strcpy(path,"votes/");
-	
-	strcat(path, position);
+    while (true)
+    {
+        printf("\n\n\t\t[#] Your selection: ");
+        scanf("%s", read_id);
 
-    // Set up file details
-    FILE *votesfileptr;
-    votesfileptr = fopen(path, "a");
+        if (candidate_selection > get_number_of_candidates(path))
+        {
+            continue;
+        }
+
+        printf("\n\t\tYour %s selection: ", position_title);
+        print_candidate_on_line(atoi(read_id), path);
+
+        printf("\n\n\t\t[--] Confirm [y/n]: ");
+        scanf("%s", confirm);
+
+        if (!strcmp(confirm, "n"))
+        {
+            continue;
+        }
+        else
+        {
     
-    strcat(read_id, "\n");
-    
-    // Append Candidate ID to file
-	fprintf(votesfileptr, read_id);
-	
-    fclose(votesfileptr);
-    
-    
+		    // Change path to votes
+			strcpy(path,"votes/");
+			
+			strcat(path, position);
+		
+		    // Set up file details
+		    FILE *votesfileptr;
+		    votesfileptr = fopen(path, "a");
+		    
+		    strcat(read_id, "\n");
+		    
+		    // Append Candidate ID to file
+			fprintf(votesfileptr, read_id);
+			
+		    fclose(votesfileptr);
+            system(CLEAR_COMMAND);
+            break;
+        }
+    }
 }
 
 void vote_for_candidates()
@@ -170,14 +236,55 @@ void vote_for_candidates()
         "Chairman",
         "Treasurer",
         "Secretary"};
-    int positions = 3;
+    size_t positions = 3;
+    
     int i;
+
+    printf("\n\t\tVOTING\n\t\tMake your best selections\n");
     for (i = 0; i < positions; i++)
     {
-        printf("\n\t\tVOTING\n\t\tMake your best selections\n");
         // Display candidates to choose from
         vote_position(position_titles[i]);
     }
+}
+
+int get_number_of_candidates(char path[30])
+{
+    FILE *fileptr;
+    fileptr = fopen(path, "r");
+
+    char line_str[30];
+    int read_number = 1;
+
+    while (fgets(line_str, sizeof(line_str), fileptr))
+    {
+        read_number++;
+    }
+
+    fclose(fileptr);
+
+    return read_number;
+}
+
+void print_candidate_on_line(int line_number, char path[30])
+{
+
+    FILE *fileptr;
+    fileptr = fopen(path, "r");
+
+    char line_str[30];
+    int read_number = 1;
+
+    while (fgets(line_str, sizeof(line_str), fileptr))
+    {
+        if (read_number == line_number)
+        {
+            printf("%s", remove_new_line(line_str));
+        }
+        read_number++;
+    }
+
+    fclose(fileptr);
 }
 
 char *remove_new_line(char *strbuffer)
@@ -246,13 +353,13 @@ bool authenticate_voter(int voter_id)
         // Determine if credentials match
         if (!strcmp(read_name, input_name) && !strcmp(read_pass, input_pass))
         {
-            system("cls");
+            system(CLEAR_COMMAND);
             printf("\n\t[++] Success!!!\n");
             return true;
         }
         else
         {
-            system("cls");
+            system(CLEAR_COMMAND);
             printf("\n\t[*#@!] No match found :(\n");
             char retry[1];
             printf("\n\t[--] Retry? [y/n]: ");
@@ -263,7 +370,7 @@ bool authenticate_voter(int voter_id)
             }
             else
             {
-                system("cls");
+                system(CLEAR_COMMAND);
             }
         }
     }
